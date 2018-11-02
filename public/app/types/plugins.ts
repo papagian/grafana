@@ -89,7 +89,7 @@ export interface PluginsState {
 
 export interface TemplateQueryProps {
   query: any;
-  onChange: (c: any) => void;
+  onChange: (c: any, definition: string) => void;
   datasource: any;
-  // datasource: StackdriverDatasource;
+  definition: string;
 }
