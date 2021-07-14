@@ -1,11 +1,145 @@
 groups:
   - name: ALERT
     rules:
-    - alert: AppCrash
-      expr: process_open_fds > 0
-      for: 15s
-      labels:
-        severity: critical
-      annotations:
-        summary: Number of open fds > 0
-        description: Just testing
+      - alert: AppCrash
+        expr: process_open_fds > 0
+        for: 15s
+        labels:
+          severity: critical
+        annotations:
+          summary: Number of open fds > 0
+          description: Just testing
+  - name: node-exporter
+    rules:
+      - alert: NodeFilesystemAlmostOutOfSpace
+        expr: (
+          node_filesystem_avail_bytes{job="integrations/node_exporter",fstype!=""} / node_filesystem_size_bytes{job="integrations/node_exporter",fstype!=""} * 100 < 5
+          and
+          node_filesystem_readonly{job="integrations/node_exporter",fstype!=""} == 0
+          )
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: Filesystem has less than 5% space left.
+          description: 'Filesystem on {{ $labels.device }} at {{ $labels.instance }} has only {{ printf "%.2f" $value }}% available space left.'
+      - alert: NodeFilesystemAlmostOutOfSpace
+        expr: (
+          node_filesystem_avail_bytes{job="integrations/node_exporter",fstype!=""} / node_filesystem_size_bytes{job="integrations/node_exporter",fstype!=""} * 100 < 3
+          and
+          node_filesystem_readonly{job="integrations/node_exporter",fstype!=""} == 0
+          )
+        for: 1h
+        labels:
+          severity: critical
+        annotations:
+          description: 'Filesystem on {{ $labels.device }} at {{ $labels.instance }} has only {{ printf "%.2f" $value }}% available space left.'
+          summary: Filesystem has less than 3% space left.
+      - alert: NodeFilesystemFilesFillingUp
+        expr: (
+          node_filesystem_files_free{job="integrations/node_exporter",fstype!=""} / node_filesystem_files{job="integrations/node_exporter",fstype!=""} * 100 < 40
+          and
+          predict_linear(node_filesystem_files_free{job="integrations/node_exporter",fstype!=""}[6h], 24*60*60) < 0
+          and
+          node_filesystem_readonly{job="integrations/node_exporter",fstype!=""} == 0
+          )
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: Filesystem is predicted to run out of inodes within the next 24 hours.
+          description: 'Filesystem on {{ $labels.device }} at {{ $labels.instance }} has only {{ printf "%.2f" $value }}% available inodes left and is filling up.'
+      - alert: NodeFilesystemFilesFillingUp4
+        expr: (
+          node_filesystem_files_free{job="integrations/node_exporter",fstype!=""} / node_filesystem_files{job="integrations/node_exporter",fstype!=""} * 100 < 20
+          and
+          predict_linear(node_filesystem_files_free{job="integrations/node_exporter",fstype!=""}[6h], 4*60*60) < 0
+          and
+          node_filesystem_readonly{job="integrations/node_exporter",fstype!=""} == 0
+          )
+        for: 1h
+        labels:
+          severity: critical
+        annotations:
+          summary: Filesystem is predicted to run out of inodes within the next 4 hours.
+          description: 'Filesystem on {{ $labels.device }} at {{ $labels.instance }} has only {{ printf "%.2f" $value }}% available inodes left and is filling up fast.'
+      - alert: NodeFilesystemAlmostOutOfFiles
+        expr: (
+          node_filesystem_files_free{job="integrations/node_exporter",fstype!=""} / node_filesystem_files{job="integrations/node_exporter",fstype!=""} * 100 < 5
+          and
+          node_filesystem_readonly{job="integrations/node_exporter",fstype!=""} == 0
+          )
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: Filesystem has less than 5% inodes left.
+          description: 'Filesystem on {{ $labels.device }} at {{ $labels.instance }} has only {{ printf "%.2f" $value }}% available inodes left.'
+      - alert: NodeFilesystemAlmostOutOfFiles
+        expr: (
+          node_filesystem_files_free{job="integrations/node_exporter",fstype!=""} / node_filesystem_files{job="integrations/node_exporter",fstype!=""} * 100 < 3
+          and
+          node_filesystem_readonly{job="integrations/node_exporter",fstype!=""} == 0
+          )
+        for: 1h
+        labels:
+          severity: critical
+        annotations:
+          summary: Filesystem has less than 3% inodes left.
+          description: 'Filesystem on {{ $labels.device }} at {{ $labels.instance }} has only {{ printf "%.2f" $value }}% available inodes left.'
+      - alert: NodeNetworkReceiveErrs
+        expr: increase(node_network_receive_errs_total[2m]) > 10
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: Network interface is reporting many receive errors.
+          description: '{{ $labels.instance }} interface {{ $labels.device }} has encountered {{ printf "%.0f" $value }} receive errors in the last two minutes.'
+      - alert: NodeNetworkTransmitErrs
+        expr: increase(node_network_transmit_errs_total[2m]) > 10
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: Network interface is reporting many transmit errors.
+          description: '{{ $labels.instance }} interface {{ $labels.device }} has encountered {{ printf "%.0f" $value }} transmit errors in the last two minutes.'
+      - alert: NodeHighNumberConntrackEntriesUsed
+        expr: (node_nf_conntrack_entries / node_nf_conntrack_entries_limit) > 0.75
+        labels:
+          severity: warning
+        annotations:
+          summary: Number of conntrack are getting close to the limit.
+          description: "{{ $value | humanizePercentage }} of conntrack entries are used."
+      - alert: NodeTextFileCollectorScrapeError
+        expr: node_textfile_scrape_error{job="integrations/node_exporter"} == 1
+        labels:
+          severity: warning
+        annotations:
+          summary: Node Exporter text file collector failed to scrape.
+          description: Node Exporter text file collector failed to scrape.
+      - alert: NodeClockSkewDetected
+        expr: (
+          node_timex_offset_seconds > 0.05
+          and
+          deriv(node_timex_offset_seconds[5m]) >= 0
+          )
+          or
+          (
+          node_timex_offset_seconds < -0.05
+          and
+          deriv(node_timex_offset_seconds[5m]) <= 0
+          )
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: Clock skew detected.
+          description: Clock on {{ $labels.instance }} is out of sync by more than 300s. Ensure NTP is configured correctly on this host.
+      - alert: NodeClockNotSynchronising
+        expr: min_over_time(node_timex_sync_status[5m]) == 0
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: Clock not synchronising.
+          description: Clock on {{ $labels.instance }} is not synchronising. Ensure NTP is configured on this host.
