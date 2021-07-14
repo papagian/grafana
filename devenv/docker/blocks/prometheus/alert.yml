@@ -13,28 +13,28 @@ groups:
     rules:
       - alert: NodeFilesystemAlmostOutOfSpace
         expr: (
-          node_filesystem_avail_bytes{job="integrations/node_exporter",fstype!=""} / node_filesystem_size_bytes{job="integrations/node_exporter",fstype!=""} * 100 < 5
+          node_filesystem_avail_bytes{fstype!=""} / node_filesystem_size_bytes{fstype!=""} * 100 > 1
           and
-          node_filesystem_readonly{job="integrations/node_exporter",fstype!=""} == 0
+          node_filesystem_readonly{fstype!=""} == 0
           )
-        for: 1h
+        for: 15s
         labels:
           severity: warning
         annotations:
-          summary: Filesystem has less than 5% space left.
-          description: 'Filesystem on {{ $labels.device }} at {{ $labels.instance }} has only {{ printf "%.2f" $value }}% available space left.'
+          summary: Filesystem usage is over 1%.
+          description: 'Filesystem on {{ $labels.job}} -  {{ $labels.device }} at {{ $labels.instance }} has only {{ printf "%.2f" $value }}% available space left.'
       - alert: NodeFilesystemAlmostOutOfSpace
         expr: (
-          node_filesystem_avail_bytes{job="integrations/node_exporter",fstype!=""} / node_filesystem_size_bytes{job="integrations/node_exporter",fstype!=""} * 100 < 3
+          node_filesystem_avail_bytes{fstype!=""} / node_filesystem_size_bytes{fstype!=""} * 100 > 2
           and
-          node_filesystem_readonly{job="integrations/node_exporter",fstype!=""} == 0
+          node_filesystem_readonly{fstype!=""} == 0
           )
-        for: 1h
+        for: 15s
         labels:
           severity: critical
         annotations:
-          description: 'Filesystem on {{ $labels.device }} at {{ $labels.instance }} has only {{ printf "%.2f" $value }}% available space left.'
-          summary: Filesystem has less than 3% space left.
+          description: 'Filesystem on {{ $labels.job}} - {{ $labels.device }} at {{ $labels.instance }} has only {{ printf "%.2f" $value }}% available space left.'
+          summary: Filesystem usage is over 2%.
       - alert: NodeFilesystemFilesFillingUp
         expr: (
           node_filesystem_files_free{job="integrations/node_exporter",fstype!=""} / node_filesystem_files{job="integrations/node_exporter",fstype!=""} * 100 < 40
