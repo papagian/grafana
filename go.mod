@@ -45,7 +45,7 @@ require (
 	github.com/go-stack/stack v1.8.0
 	github.com/gobwas/glob v0.2.3
 	github.com/gofrs/uuid v4.0.0+incompatible
-	github.com/golang/mock v1.5.0
+	github.com/golang/mock v1.6.0
 	github.com/google/go-cmp v0.5.5
 	github.com/google/uuid v1.2.0
 	github.com/gorilla/websocket v1.4.2
@@ -102,7 +102,7 @@ require (
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	golang.org/x/sys v0.0.0-20210521203332-0cec03c779c1 // indirect
 	golang.org/x/time v0.0.0-20210220033141-f8bda1e9f3ba
-	golang.org/x/tools v0.1.0
+	golang.org/x/tools v0.1.1
 	gonum.org/v1/gonum v0.9.1
 	google.golang.org/api v0.45.0
 	google.golang.org/grpc v1.37.1
